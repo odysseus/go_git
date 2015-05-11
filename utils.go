@@ -1,5 +1,5 @@
 // Utility functions mainly for manipulating and parsing the returned JSON
-package main
+package git
 
 import (
 	"fmt"

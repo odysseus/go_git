@@ -1,26 +1,13 @@
 // The base functions for making requests and returning the JSON from them
-package main
+package git
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 )
-
-func main() {
-	file, err := os.Open(fmt.Sprintf("%v/.github_api_key", os.Getenv("HOME")))
-	check(err)
-
-	contents, err := ioutil.ReadAll(file)
-	check(err)
-
-	token := OAuthToken(contents)
-
-	fmt.Println(OrgMemberHandles("recursecenter", token))
-}
 
 type OAuthToken string
 

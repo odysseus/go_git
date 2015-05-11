@@ -1,5 +1,5 @@
 // Functions that deal with individual repos
-package main
+package git
 
 import (
 	"fmt"
