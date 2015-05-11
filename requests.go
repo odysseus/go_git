@@ -1,3 +1,4 @@
+// The base functions for making requests and returning the JSON from them
 package main
 
 import (
@@ -9,8 +10,6 @@ import (
 	"time"
 )
 
-type OAuthToken string
-
 func main() {
 	file, err := os.Open(fmt.Sprintf("%v/.github_api_key", os.Getenv("HOME")))
 	check(err)
@@ -19,7 +18,32 @@ func main() {
 	check(err)
 
 	token := OAuthToken(contents)
-	fmt.Println(token)
+
+	fmt.Println(OrgMemberHandles("recursecenter", token))
+}
+
+type OAuthToken string
+
+// Request struct is used to construct the query URIs
+type Request struct {
+	baseURI string
+	Query   string
+}
+
+// query param should have no leading or trailing slashes
+func NewRequest(query string) *Request {
+	return &Request{
+		baseURI: "https://api.github.com",
+		Query:   query,
+	}
+}
+
+// Constructs an API request with page and per_page options
+// note that events endpoints currently only allow per_page of 30
+// all other requests can have a per_page of up to 100
+func (r *Request) String(page, perPage int) string {
+	return fmt.Sprintf("%s/%s?page=%v&per_page=%v",
+		r.baseURI, r.Query, page, perPage)
 }
 
 func check(err error) {
@@ -32,7 +56,7 @@ func check(err error) {
 // token:				A string containing a Github OAuth token
 // baseRequest:	The API args only, with no leading or trailing slashes
 //							eg: "users/octocat/repos"
-func APIRequest(token OAuthToken, baseRequest string) []map[string]interface{} {
+func APIRequest(query string, perPage int, token OAuthToken) []map[string]interface{} {
 	page := 0
 	done := false
 	fin := make([]map[string]interface{}, 0)
@@ -42,11 +66,13 @@ func APIRequest(token OAuthToken, baseRequest string) []map[string]interface{} {
 		page++
 
 		// Create a request with the OAuth token in the header
-		request := fmt.Sprintf("https://api.github.com/%v?page=%v&per_page=%v",
-			baseRequest, page, 100)
-		req, err := http.NewRequest("GET", request, nil)
+		request := NewRequest(query)
+		req, err := http.NewRequest("GET", request.String(page, perPage), nil)
 		check(err)
-		req.Header.Add("Authorization", fmt.Sprintf("token %s", token))
+
+		if token != "" {
+			req.Header.Add("Authorization", fmt.Sprintf("token %s", token))
+		}
 
 		// Send the request and read the response
 		resp, err := client.Do(req)
@@ -69,7 +95,7 @@ func APIRequest(token OAuthToken, baseRequest string) []map[string]interface{} {
 		}
 
 		// If that page was less than the page limit we are done
-		if len(js) < 100 {
+		if len(js) < perPage {
 			done = true
 		}
 
@@ -80,4 +106,24 @@ func APIRequest(token OAuthToken, baseRequest string) []map[string]interface{} {
 	}
 
 	return fin
+}
+
+// Read the rate limit, currently 5000 requests per hour when auth'd
+// and 60 when not
+func RateLimit(token OAuthToken) int {
+	js := APIRequest("rate_limit", 100, token)
+	if rate, ok := js[0]["rate"].(map[string]float64); ok {
+		return int(rate["limit"])
+	}
+	return -1
+}
+
+// Reads the remaining rate limit for the token, with an empty string it
+// returns the remaining unauth'd rate limit for the IP
+func RateLimitRemaining(token OAuthToken) int {
+	js := APIRequest("rate_limit", 100, token)
+	if rate, ok := js[0]["rate"].(map[string]float64); ok {
+		return int(rate["remaining"])
+	}
+	return -1
 }
