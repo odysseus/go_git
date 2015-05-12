@@ -99,18 +99,14 @@ func APIRequest(query string, perPage int, token OAuthToken) []map[string]interf
 // and 60 when not
 func RateLimit(token OAuthToken) int {
 	js := APIRequest("rate_limit", 100, token)
-	if rate, ok := js[0]["rate"].(map[string]float64); ok {
-		return int(rate["limit"])
-	}
-	return -1
+	rate := js[0]["rate"].(map[string]interface{})
+	return int(rate["limit"].(float64))
 }
 
 // Reads the remaining rate limit for the token, with an empty string it
 // returns the remaining unauth'd rate limit for the IP
 func RateLimitRemaining(token OAuthToken) int {
 	js := APIRequest("rate_limit", 100, token)
-	if rate, ok := js[0]["rate"].(map[string]float64); ok {
-		return int(rate["remaining"])
-	}
-	return -1
+	rate := js[0]["rate"].(map[string]interface{})
+	return int(rate["remaining"].(float64))
 }

@@ -1,3 +1,0 @@
-{
-  "rate_limit":"{\n  \"rate_limit\": \"{ \"resources\": { \"core\": { \"limit\": 5000, \"remaining\": 4586, \"reset\": 1431386282 }, \"search\": { \"limit\": 30, \"remaining\": 30, \"reset\": 1431382771 } }, \"rate\": { \"limit\": 5000, \"remaining\": 4586, \"reset\": 1431386282 } }\" \n}\n" 
-}
