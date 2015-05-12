@@ -9,13 +9,15 @@ import (
 
 // Pass-through for GET /users/:user
 func User(user string, token OAuthToken) map[string]interface{} {
-	js := APIRequest(fmt.Sprintf("users/%s", user), 100, token)
+	req := NewRequest(fmt.Sprintf("users/%s", user))
+	js := APIRequest(req, token)
 	return js[0]
 }
 
 // Pass-through for GET /users/:user/repos
 func UserRepos(user string, token OAuthToken) []map[string]interface{} {
-	return APIRequest(fmt.Sprintf("users/%s/repos", user), 100, token)
+	req := NewRequest(fmt.Sprintf("users/%s/repos", user))
+	return APIRequest(req, token)
 }
 
 // Returns the total number of repos for the user
@@ -32,7 +34,8 @@ func UserRepoCount(user string, token OAuthToken) int {
 
 // Returns a slice of all the repo names for a user
 func UserRepoNames(user string, token OAuthToken) []string {
-	js := APIRequest(fmt.Sprintf("users/%s/repos", user), 100, token)
+	req := NewRequest(fmt.Sprintf("users/%s/repos", user))
+	js := APIRequest(req, token)
 	vals := ValuesForKey("name", js)
 	return StringifyInterfaceSlice(vals)
 }

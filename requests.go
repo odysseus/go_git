@@ -15,6 +15,7 @@ type OAuthToken string
 type Request struct {
 	baseURI string
 	Query   string
+	PerPage int
 }
 
 // query param should have no leading or trailing slashes
@@ -22,15 +23,16 @@ func NewRequest(query string) *Request {
 	return &Request{
 		baseURI: "https://api.github.com",
 		Query:   query,
+		PerPage: 100,
 	}
 }
 
 // Constructs an API request with page and per_page options
 // note that events endpoints currently only allow per_page of 30
 // all other requests can have a per_page of up to 100
-func (r *Request) String(page, perPage int) string {
+func (r *Request) String(page int) string {
 	return fmt.Sprintf("%s/%s?page=%v&per_page=%v",
-		r.baseURI, r.Query, page, perPage)
+		r.baseURI, r.Query, page, r.PerPage)
 }
 
 func check(err error) {
@@ -43,7 +45,7 @@ func check(err error) {
 // token:				A string containing a Github OAuth token
 // baseRequest:	The API args only, with no leading or trailing slashes
 //							eg: "users/octocat/repos"
-func APIRequest(query string, perPage int, token OAuthToken) []map[string]interface{} {
+func APIRequest(request *Request, token OAuthToken) []map[string]interface{} {
 	page := 0
 	done := false
 	fin := make([]map[string]interface{}, 0)
@@ -53,8 +55,7 @@ func APIRequest(query string, perPage int, token OAuthToken) []map[string]interf
 		page++
 
 		// Create a request with the OAuth token in the header
-		request := NewRequest(query)
-		req, err := http.NewRequest("GET", request.String(page, perPage), nil)
+		req, err := http.NewRequest("GET", request.String(page), nil)
 		check(err)
 
 		if token != "" {
@@ -82,7 +83,7 @@ func APIRequest(query string, perPage int, token OAuthToken) []map[string]interf
 		}
 
 		// If that page was less than the page limit we are done
-		if len(js) < perPage {
+		if len(js) < request.PerPage {
 			done = true
 		}
 
@@ -98,7 +99,8 @@ func APIRequest(query string, perPage int, token OAuthToken) []map[string]interf
 // Read the rate limit, currently 5000 requests per hour when auth'd
 // and 60 when not
 func RateLimit(token OAuthToken) int {
-	js := APIRequest("rate_limit", 100, token)
+	req := NewRequest("rate_limit")
+	js := APIRequest(req, token)
 	rate := js[0]["rate"].(map[string]interface{})
 	return int(rate["limit"].(float64))
 }
@@ -106,7 +108,8 @@ func RateLimit(token OAuthToken) int {
 // Reads the remaining rate limit for the token, with an empty string it
 // returns the remaining unauth'd rate limit for the IP
 func RateLimitRemaining(token OAuthToken) int {
-	js := APIRequest("rate_limit", 100, token)
+	req := NewRequest("rate_limit")
+	js := APIRequest(req, token)
 	rate := js[0]["rate"].(map[string]interface{})
 	return int(rate["remaining"].(float64))
 }
