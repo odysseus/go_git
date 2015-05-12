@@ -20,43 +20,58 @@ func main() {
 	file.Close()
 
 	// The map stores the query string with the repsonse it receives
-	testCases := make(map[string][]map[string]interface{})
+	testCases := make(map[string][]byte)
+	var js []byte
 
 	/// Requests ///
 
 	// GET rate_limit
 	req := git.NewRequest("rate_limit")
-	testCases[req.Query] = git.APIRequest(req, &token)
+	js, err = json.Marshal(git.APIRequest(req, &token))
+	check(err)
+	testCases[req.Query] = js
 
 	/// Users ///
 
 	// GET :user
 	req = git.NewRequest("users/odysseus")
-	testCases[req.Query] = git.APIRequest(req, &token)
+	js, err = json.Marshal(git.APIRequest(req, &token))
+	check(err)
+	testCases[req.Query] = js
 
 	// GET :user repos
 	req = git.NewRequest("users/odysseus/repos")
-	testCases[req.Query] = git.APIRequest(req, &token)[0:3]
+	js, err = json.Marshal(git.APIRequest(req, &token))
+	check(err)
+	testCases[req.Query] = js
 
 	/// Repos ///
 
 	// GET /repos/:user/:repo
 	req = git.NewRequest("repos/odysseus/go_git")
-	testCases[req.Query] = git.APIRequest(req, &token)
+	js, err = json.Marshal(git.APIRequest(req, &token))
+	check(err)
+	testCases[req.Query] = js
 
 	// GET /repos/:user/:repo/languages
 	req = git.NewRequest("repos/odysseus/go_git/languages")
-	testCases[req.Query] = git.APIRequest(req, &token)
+	js, err = json.Marshal(git.APIRequest(req, &token))
+	check(err)
+	testCases[req.Query] = js
 
 	/// Orgs ///
 
 	// GET orgs/:org
 	req = git.NewRequest("orgs/recursecenter")
-	testCases[req.Query] = git.APIRequest(req, &token)
+	js, err = json.Marshal(git.APIRequest(req, &token))
+	check(err)
+	testCases[req.Query] = js
 
 	// GET orgs/:org/members
 	req = git.NewRequest("orgs/recursecenter/members")
-	testCases[req.Query] = git.APIRequest(req, &token)[0:3]
+	js, err = json.Marshal(git.APIRequest(req, &token))
+	check(err)
+	testCases[req.Query] = js
 
 	// Write the API data to a JSON file
 	out, err := os.Create("./testdata.json")
