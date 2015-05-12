@@ -3,7 +3,7 @@ package git
 
 // Takes a slice of user handles and returns the total number of repos
 // written by them combined
-func MultiUserRepoCountTotal(users []string, token OAuthToken) int {
+func MultiUserRepoCountTotal(users []string, token *OAuthToken) int {
 	fin := 0
 	for _, user := range users {
 		fin += UserRepoCount(user, token)
@@ -13,7 +13,7 @@ func MultiUserRepoCountTotal(users []string, token OAuthToken) int {
 
 // Takes a slice of user handles and returns the total number of repos written
 // by them returned as a map where map[username]repo_count
-func MultiUserRepoCountMap(users []string, token OAuthToken) map[string]int {
+func MultiUserRepoCountMap(users []string, token *OAuthToken) map[string]int {
 	fin := make(map[string]int)
 	for _, user := range users {
 		fin[user] = UserRepoCount(user, token)
@@ -23,7 +23,7 @@ func MultiUserRepoCountMap(users []string, token OAuthToken) map[string]int {
 
 // Takes a slice of user handles and returns a map where map[language]bytes_written
 // The languages and number of bytes is combined across all the users
-func MultiUserLanguageSummary(users []string, token OAuthToken) map[string]int {
+func MultiUserLanguageSummary(users []string, token *OAuthToken) map[string]int {
 	fin := make(map[string]int)
 	for _, user := range users {
 		langs := UserLanguageSummary(user, token)
